@@ -1,0 +1,165 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector"), pg_trgm]
+}
+
+enum TicketStatus {
+  OPEN
+  ANALYSING
+  SCOUTING
+  FIXING
+  TESTING
+  AWAITING_APPROVAL
+  APPROVED
+  REJECTED
+  RESOLVED
+  FAILED
+  ESCALATED
+}
+
+enum TicketSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AgentStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+  SKIPPED
+}
+
+enum HitlDecision {
+  APPROVED
+  REJECTED
+  RETESTREQUEST
+  ESCALATED
+}
+
+enum KnowledgeType {
+  BUG_FIX
+  DATA_DICTIONARY
+  PLAYBOOK
+}
+
+model Ticket {
+  id          String         @id @default(cuid())
+  title       String
+  description String
+  stackTrace  String?        @map("stack_trace")
+  severity    TicketSeverity @default(MEDIUM)
+  status      TicketStatus   @default(OPEN)
+  service     String
+  affectedUrl String?        @map("affected_url")
+  reportedBy  String         @default("system") @map("reported_by")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+  resolvedAt  DateTime?      @map("resolved_at")
+
+  agentRuns       AgentRun[]
+  resolutions     Resolution[]
+  hitlApprovals   HitlApproval[]
+  sandboxSessions SandboxSession[]
+
+  @@map("tickets")
+}
+
+model AgentRun {
+  id         String      @id @default(cuid())
+  ticketId   String      @map("ticket_id")
+  agentName  String      @map("agent_name")
+  status     AgentStatus @default(PENDING)
+  input      Json?
+  output     Json?
+  errorMsg   String?     @map("error_msg")
+  durationMs Int?        @map("duration_ms")
+  attempt    Int         @default(1)
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@map("agent_runs")
+}
+
+model Resolution {
+  id             String   @id @default(cuid())
+  ticketId       String   @map("ticket_id")
+  affectedFile   String   @map("affected_file")
+  affectedLine   Int?     @map("affected_line")
+  diffPatch      String   @map("diff_patch")
+  fixDescription String   @map("fix_description")
+  testResults    Json     @map("test_results")
+  attemptNumber  Int      @default(1) @map("attempt_number")
+  isApplied      Boolean  @default(false) @map("is_applied")
+  appliedAt      DateTime? @map("applied_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  ticket        Ticket         @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  hitlApprovals HitlApproval[]
+
+  @@map("resolutions")
+}
+
+model HitlApproval {
+  id              String       @id @default(cuid())
+  ticketId        String       @map("ticket_id")
+  resolutionId    String       @map("resolution_id")
+  decision        HitlDecision?
+  reviewerComment String?      @map("reviewer_comment")
+  reviewerEmail   String?      @map("reviewer_email")
+  emailSentAt     DateTime?    @map("email_sent_at")
+  decidedAt       DateTime?    @map("decided_at")
+  createdAt       DateTime     @default(now()) @map("created_at")
+
+  ticket     Ticket     @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  resolution Resolution @relation(fields: [resolutionId], references: [id], onDelete: Cascade)
+
+  @@map("hitl_approvals")
+}
+
+model KnowledgeBase {
+  id                  String   @id @default(cuid())
+  ticketId            String   @map("ticket_id")
+  title               String
+  bugSummary          String   @map("bug_summary")
+  rootCause           String   @map("root_cause")
+  fixDescription      String   @map("fix_description")
+  affectedFile        String   @map("affected_file")
+  diffPatch           String   @map("diff_patch")
+  tags                String[]
+  bugType             String   @map("bug_type")
+  similarityThreshold Float    @default(0.85) @map("similarity_threshold")
+  timesReferenced     Int      @default(0) @map("times_referenced")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  type                KnowledgeType @default(BUG_FIX)
+  metadata            Json?
+
+  /// @pgvector
+  embedding Unsupported("vector(1536)")?
+
+  @@map("knowledge_base")
+}
+
+model SandboxSession {
+  id            String   @id @default(cuid())
+  ticketId      String   @map("ticket_id")
+  sandboxPath   String   @map("sandbox_path")
+  status        String   @default("ACTIVE")
+  createdAt     DateTime @default(now()) @map("created_at")
+  destroyedAt   DateTime? @map("destroyed_at")
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@map("sandbox_sessions")
+}

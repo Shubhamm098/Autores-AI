@@ -1,0 +1,40 @@
+name: AutoRes CI Pipeline
+
+# 1. Triggers: When should this script run?
+# We want it to run every time someone pushes code to the 'main' branch,
+# or when someone opens a Pull Request to merge into 'main'.
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  # 2. The Job: Run all our Jest tests to ensure we didn't break the app!
+  test-ecommerce:
+    # 3. The Environment: GitHub will spin up a fresh Ubuntu Linux server just for this job
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Download our code from GitHub onto the Ubuntu server
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # Step 2: Install Node.js on the server
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm' # Caches npm modules to speed up future runs!
+
+    # Step 3: Install dependencies for the E-Commerce app
+    - name: Install Dependencies
+      working-directory: ./ecommerce-app
+      run: npm ci # 'npm ci' is like 'npm install' but strictly uses package-lock.json
+
+    # Step 4: Run the Jest tests!
+    # Note: Because our tests require a real PostgreSQL database, this will actually FAIL
+    # right now! We need to spin up a "Service Container" for Postgres inside GitHub Actions.
+    - name: Run Jest Tests
+      working-directory: ./ecommerce-app
+      run: npm test

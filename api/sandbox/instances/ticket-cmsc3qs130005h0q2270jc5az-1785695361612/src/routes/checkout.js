@@ -1,0 +1,34 @@
+const express = require('express');
+const router = express.Router();
+const { pool } = require('../db/client');
+
+// POST /api/checkout - Process checkout
+router.post('/', async (req, res) => {
+  const { tenant = 'default', cartItems } = req.body;
+
+  try {
+    // 1. Fetch tenant config metadata
+    const { rows: configs } = await pool.query(
+      'SELECT features FROM tenant_configs WHERE tenant_name = $1',
+      [tenant]
+    );
+
+    if (configs.length === 0) {
+      // Changed status code from 403 to 404
+      return res.status(404).json({ error: 'Tenant configuration not found' });
+    }
+
+    const features = configs[0].features;
+
+    if (features && features.allow_checkout === false) {
+      return res.status(403).json({ error: 'Checkout is disabled by tenant configuration.' });
+    }
+
+    // Process checkout (mocked)
+    res.json({ success: true, message: 'Checkout successful', items: cartItems });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+module.exports = router;

@@ -1,0 +1,28 @@
+{
+  "name": "autores-demo-app",
+  "version": "1.0.0",
+  "description": "Demo corporate API app with intentional bugs for AutoRes AI",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js",
+    "test": "jest --forceExit",
+    "test:coverage": "jest --coverage --forceExit"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "pg": "^8.11.3",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.4",
+    "nodemon": "^3.0.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testTimeout": 15000
+  }
+}

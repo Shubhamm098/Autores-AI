@@ -1,0 +1,23 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Next.js
+.next/
+out/
+build/
+
+# Environment Variables (CRITICAL: Never commit secrets to GitHub)
+.env
+.env.local
+.env.*.local
+
+# Sandbox / Temporary Data
+sandbox/instances/
+prisma/dev.db
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db

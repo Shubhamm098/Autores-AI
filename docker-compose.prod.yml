@@ -1,0 +1,67 @@
+version: '3.9'
+
+services:
+  # 1. The PostgreSQL Vector Database
+  postgres:
+    image: pgvector/pgvector:pg15
+    container_name: autores_postgres
+    environment:
+      POSTGRES_USER: autores
+      POSTGRES_PASSWORD: autores_secret
+      POSTGRES_DB: autores_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - autores_pgdata:/var/lib/postgresql/data
+      - ./prisma/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U autores -d autores_db']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. The AutoRes AI Backend (Agent Swarm)
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: autores_api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://autores:autores_secret@postgres:5432/autores_db
+      - GROQ_API_KEY=${GROQ_API_KEY}
+    ports:
+      - '3001:3001'
+
+  # 3. The Next.js Dashboard
+  dashboard:
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+    container_name: autores_dashboard
+    depends_on:
+      - api
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+      - NEXT_PUBLIC_WS_URL=ws://localhost:3001
+    ports:
+      - '3000:3000'
+
+  # 4. The target E-commerce Application
+  ecommerce:
+    build:
+      context: ./ecommerce-app
+      dockerfile: Dockerfile
+    container_name: autores_ecommerce
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://autores:autores_secret@postgres:5432/autores_db
+    ports:
+      - '3002:3002'
+
+volumes:
+  autores_pgdata:

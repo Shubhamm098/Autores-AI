@@ -1,0 +1,32 @@
+{
+  "name": "autores-ai",
+  "version": "1.0.0",
+  "description": "Production-grade multi-agent AI ticket resolution system",
+  "private": true,
+  "workspaces": [
+    "api",
+    "demo-app",
+    "dashboard",
+    "ecommerce-app"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:ecommerce\" \"npm run dev:dashboard\"",
+    "dev:api": "cd api && npm run dev",
+    "dev:demo": "cd demo-app && npm run dev",
+    "dev:ecommerce": "cd ecommerce-app && npm run dev",
+    "dev:dashboard": "cd dashboard && npm run dev",
+    "db:migrate": "npx prisma migrate dev",
+    "db:seed": "node prisma/seed.js",
+    "db:studio": "npx prisma studio",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "setup": "npm run docker:up && npm install && npx prisma migrate dev && node prisma/seed.js"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "prisma": "^5.22.0"
+  },
+  "dependencies": {
+    "zod": "^3.25.76"
+  }
+}
