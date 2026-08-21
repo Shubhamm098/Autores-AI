@@ -1,0 +1,45 @@
+databases:
+  - name: autores-db
+    databaseName: autores_db
+    user: autores
+    plan: free
+
+services:
+  # The Agent API
+  - type: web
+    name: autores-api
+    env: docker
+    dockerfilePath: ./api/Dockerfile
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: autores-db
+          property: connectionString
+      - key: GROQ_API_KEY
+        sync: false # You will enter this manually in the Render dashboard!
+
+  # The E-commerce App
+  - type: web
+    name: autores-ecommerce
+    env: docker
+    dockerfilePath: ./ecommerce-app/Dockerfile
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: autores-db
+          property: connectionString
+
+  # The Next.js Dashboard
+  - type: web
+    name: autores-dashboard
+    env: docker
+    dockerfilePath: ./dashboard/Dockerfile
+    plan: free
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: autores-api
+          envVarKey: RENDER_EXTERNAL_URL
