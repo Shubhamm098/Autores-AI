@@ -16,6 +16,10 @@ COPY prisma ./prisma
 COPY agents ./agents
 COPY ecommerce-app ./ecommerce-app
 
+# Install ecommerce dependencies (so pg and supertest are available for tests)
+WORKDIR /app/ecommerce-app
+RUN npm install
+
 # 4. Copy the actual API source code
 COPY api ./api
 
