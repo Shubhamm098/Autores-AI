@@ -121,21 +121,24 @@ ${retryContext}`,
         if (nums) result.linesChanged = nums.map(Number);
       }
 
-      // 1. Try to extract from <fixedContent> with or without backticks
-      let extractedCode = null;
-      const fixedContentMatch = raw.match(/<fixedContent>([\s\S]*?)<\/fixedContent>/i);
-      if (fixedContentMatch) {
-        extractedCode = fixedContentMatch[1];
-      } else {
-        // 2. Try to extract just from backticks if tag is missing
-        const backtickMatch = raw.match(/```(?:javascript|js)?\s*\n([\s\S]*?)```/i);
-        if (backtickMatch) extractedCode = backtickMatch[1];
+      // Find ALL code blocks in the response
+      const allCodeBlocks = [];
+      const regex = /```(?:javascript|js)?\s*\n([\s\S]*?)```/gi;
+      let match;
+      while ((match = regex.exec(raw)) !== null) {
+        allCodeBlocks.push(match[1]);
       }
 
-      if (extractedCode) {
-        // Remove trailing backticks if they were accidentally included inside the tag
-        extractedCode = extractedCode.replace(/```(?:javascript|js)?\s*\n/gi, '').replace(/```/g, '').trim();
-        result.fixedContent = extractedCode;
+      if (allCodeBlocks.length > 0) {
+        // The full file is almost certainly the longest code block
+        allCodeBlocks.sort((a, b) => b.length - a.length);
+        result.fixedContent = allCodeBlocks[0].trim();
+      } else {
+        // Fallback: extract from <fixedContent> directly
+        const fixedContentMatch = raw.match(/<fixedContent>([\s\S]*?)<\/fixedContent>/i);
+        if (fixedContentMatch) {
+          result.fixedContent = fixedContentMatch[1].trim();
+        }
       }
     } catch (err) {
       log.error(`Failed to parse LLM response`, err.message);
