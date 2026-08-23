@@ -24,6 +24,10 @@ async function generateFix(scoutResult, analysisResult, ticket, reviewerComment 
   const testFileContent = fs.existsSync(testFilePath) ? fs.readFileSync(testFilePath, 'utf8') : '';
   log.info(`Test file loaded`, { path: testFilePath, exists: fs.existsSync(testFilePath), length: testFileContent.length });
 
+  const lines = scoutResult.content.split('\n');
+  const firstLine = lines[0].trim();
+  const lastLine = lines.filter(l => l.trim().length > 0).pop().trim();
+
   const prompt = [
     {
       role: 'system',
@@ -31,7 +35,9 @@ async function generateFix(scoutResult, analysisResult, ticket, reviewerComment 
 you must produce a minimal, production-safe fix.
 
 Rules:
-- CRITICAL: You are replacing the existing file. You MUST output the ENTIRE, complete contents of the fixed file from the very first line (including all imports) to the very last line (including module.exports). 
+- CRITICAL: You are replacing the existing file. You MUST output the ENTIRE, complete contents of the fixed file.
+- CRITICAL: Your generated code MUST start with exactly: "${firstLine}"
+- CRITICAL: Your generated code MUST end with exactly: "${lastLine}"
 - NEVER truncate, summarize, or omit unchanged code. Do NOT use placeholders like "// ... rest of code".
 - Add a brief inline comment explaining the fix.
 - Ensure the fix passes the expected behavior defined in the tests.
@@ -97,6 +103,9 @@ ${retryContext}`,
   const os = require('os');
   
   function checkSyntax(code) {
+    if (code.length < scoutResult.content.length * 0.4) {
+      return { valid: false, error: 'Snippet detected. Code is less than 40% of original length. You MUST output the ENTIRE file.' };
+    }
     const tmpFile = path.join(os.tmpdir(), `syntax-check-${Date.now()}-${Math.floor(Math.random() * 1000)}.js`);
     fs.writeFileSync(tmpFile, code, 'utf8');
     try {
