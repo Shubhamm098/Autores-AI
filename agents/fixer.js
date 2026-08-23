@@ -36,7 +36,7 @@ Rules:
 - Add a brief inline comment explaining the fix.
 - Ensure the fix passes the expected behavior defined in the tests.
 - CRITICAL: You MUST output the ENTIRE, complete contents of the fixed file from the very first line (including all imports) to the very last line. NEVER truncate or omit unchanged code.
-- CRITICAL: Do NOT switch to ES6 module syntax (no `export default`). Maintain CommonJS (`require` and `module.exports`).
+- CRITICAL: Do NOT switch to ES6 module syntax (no 'export default'). Maintain CommonJS ('require' and 'module.exports').
 
 Respond strictly in the following format:
 <description>1-2 sentence description of what was fixed</description>
