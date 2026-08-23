@@ -2,6 +2,9 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+# Install OpenSSL for Prisma
+RUN apk add --no-cache openssl
+
 # 1. Copy the ROOT package.json and the API's package.json
 COPY package*.json ./
 COPY api/package*.json ./api/
@@ -21,6 +24,7 @@ WORKDIR /app/ecommerce-app
 RUN npm install
 
 # 4. Copy the actual API source code
+WORKDIR /app
 COPY api ./api
 
 # 5. Generate Prisma Client inside the container so the API can talk to the DB
