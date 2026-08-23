@@ -39,9 +39,9 @@ export default function TicketFeedPage() {
   tickets.forEach(t => { counts[t.status] = (counts[t.status] || 0) + 1; });
 
   return (
-    <div style={{ padding: '32px 40px', maxWidth: 900 }}>
+    <div className="p-4 md:p-8 md:py-8 md:px-10 max-w-[900px] w-full mx-auto">
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32 }}>
+      <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-4 md:gap-0">
         <div>
           <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 6 }}>🎫 Ticket Feed</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>

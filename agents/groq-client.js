@@ -12,7 +12,7 @@ const groq = new OpenAI({
   baseURL: 'https://api.groq.com/openai/v1',
 });
 
-const MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+const MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
 
 /**
  * Chat completion with Groq (ultra-fast inference)
@@ -27,9 +27,9 @@ async function chat(messages, options = {}) {
 
   // List of fallback models if we hit a 429
   const fallbacks = [
-    'mixtral-8x7b-32768',
-    'llama-3.1-8b-instant',
-    'gemma2-9b-it'
+    'openai/gpt-oss-120b',
+    'qwen/qwen3.6-27b',
+    'groq/compound'
   ];
 
   for (let attempt = 0; attempt <= fallbacks.length; attempt++) {

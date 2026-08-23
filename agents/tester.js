@@ -68,7 +68,7 @@ async function runTests(sandboxPath, ticket, affectedFile = null) {
     let stderr = '';
 
     const jestPath = path.join(__dirname, '..', 'node_modules', 'jest', 'bin', 'jest.js');
-    const jestArgs = ['--forceExit', '--json', '--testPathPattern', 'tests/'];
+    const jestArgs = ['--forceExit', '--json', '--testPathPattern', 'tests/', '--modulePathIgnorePatterns', 'sandbox/instances'];
     
     log.info(`Spawning Jest`, { cwd: sandboxPath });
 

@@ -14,6 +14,7 @@ RUN npm install --production
 WORKDIR /app
 COPY prisma ./prisma
 COPY agents ./agents
+COPY ecommerce-app ./ecommerce-app
 
 # 4. Copy the actual API source code
 COPY api ./api

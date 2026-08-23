@@ -29,6 +29,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
       - DATABASE_URL=postgresql://autores:autores_secret@postgres:5432/autores_db
       - GROQ_API_KEY=${GROQ_API_KEY}

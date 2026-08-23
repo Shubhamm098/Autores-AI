@@ -87,8 +87,7 @@ ${validationError ? `\n\nYOUR PREVIOUS OUTPUT FAILED VALIDATION:\n${validationEr
   const timer = log.time('LLM analysis');
   const raw = await chat(prompt, { 
     temperature: 0.1, 
-    model: 'llama-3.1-8b-instant',
-    response_format: { type: 'json_object' }
+    model: 'openai/gpt-oss-120b'
   });
   timer.end();
 

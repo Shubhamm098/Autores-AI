@@ -12,12 +12,7 @@ const nav = [
 export default function Sidebar() {
   const path = usePathname();
   return (
-    <aside style={{
-      width: 220, flexShrink: 0, background: 'var(--bg-secondary)',
-      borderRight: '1px solid var(--border)',
-      display: 'flex', flexDirection: 'column', padding: '24px 12px',
-      position: 'sticky', top: 0, height: '100vh',
-    }}>
+    <aside className="w-full md:w-[220px] shrink-0 bg-[#1a1d2e] border-b md:border-b-0 md:border-r border-[#2a2e40] flex flex-col p-4 md:sticky md:top-0 h-auto md:h-screen">
       {/* Logo */}
       <div style={{ padding: '0 8px 28px', borderBottom: '1px solid var(--border)', marginBottom: 16 }}>
         <div style={{ fontSize: 20, fontWeight: 700 }}>
@@ -27,12 +22,12 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav style={{ flex: 1 }}>
+      <nav className="flex-1 flex flex-row md:flex-col overflow-x-auto gap-2 mb-4 md:mb-0">
         {nav.map((item) => (
           <Link
             key={item.href}
             href={item.href}
-            className={`nav-item ${path === item.href ? 'active' : ''}`}
+            className={`nav-item flex-shrink-0 ${path === item.href ? 'active' : ''}`}
             style={{ marginBottom: 4, display: 'flex' }}
           >
             <span style={{ fontSize: 16 }}>{item.icon}</span>
@@ -42,7 +37,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div style={{ padding: '16px 8px 0', borderTop: '1px solid var(--border)' }}>
+      <div className="hidden md:block pt-4 px-2 border-t border-[#2a2e40]">
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div className="animate-blink" style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--success)' }} />
           <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Agents online</span>
