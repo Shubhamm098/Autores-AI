@@ -31,11 +31,10 @@ async function generateFix(scoutResult, analysisResult, ticket, reviewerComment 
 you must produce a minimal, production-safe fix.
 
 Rules:
-- Make the SMALLEST logic change possible to fix the bug.
-- Do NOT refactor unrelated code.
+- CRITICAL: You are replacing the existing file. You MUST output the ENTIRE, complete contents of the fixed file from the very first line (including all imports) to the very last line (including module.exports). 
+- NEVER truncate, summarize, or omit unchanged code. Do NOT use placeholders like "// ... rest of code".
 - Add a brief inline comment explaining the fix.
 - Ensure the fix passes the expected behavior defined in the tests.
-- CRITICAL: You MUST output the ENTIRE, complete contents of the fixed file from the very first line (including all imports) to the very last line. NEVER truncate or omit unchanged code.
 - CRITICAL: Do NOT switch to ES6 module syntax (no 'export default'). Maintain CommonJS ('require' and 'module.exports').
 
 Respond strictly in the following format:
