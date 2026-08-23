@@ -113,20 +113,29 @@ ${retryContext}`,
     let result = { fixedContent: scoutResult.content, fixDescription: 'Auto-applied fix', changesSummary: 'Modified lines', linesChanged: [] };
     try {
       const descMatch = raw.match(/<description>([\s\S]*?)<\/description>/i);
-      const sumMatch = raw.match(/<summary>([\s\S]*?)<\/summary>/i);
-      const linesMatch = raw.match(/<linesChanged>([\s\S]*?)<\/linesChanged>/i);
-      const codeMatch = raw.match(/<fixedContent>[\s\S]*?```(?:javascript|js)?\n([\s\S]*?)```[\s\S]*?<\/fixedContent>/i) || raw.match(/```(?:javascript|js)?\n([\s\S]*?)```/i);
-
       if (descMatch) result.fixDescription = descMatch[1].trim();
-      if (sumMatch) result.changesSummary = sumMatch[1].trim();
+
+      const linesMatch = raw.match(/<linesChanged>([\s\S]*?)<\/linesChanged>/i);
       if (linesMatch) {
         const nums = linesMatch[1].match(/\d+/g);
         if (nums) result.linesChanged = nums.map(Number);
       }
-      if (codeMatch) result.fixedContent = codeMatch[1].trim();
-      else if (raw.includes('<fixedContent>')) {
-        const rawCode = raw.match(/<fixedContent>([\s\S]*?)<\/fixedContent>/i);
-        if (rawCode) result.fixedContent = rawCode[1].trim();
+
+      // 1. Try to extract from <fixedContent> with or without backticks
+      let extractedCode = null;
+      const fixedContentMatch = raw.match(/<fixedContent>([\s\S]*?)<\/fixedContent>/i);
+      if (fixedContentMatch) {
+        extractedCode = fixedContentMatch[1];
+      } else {
+        // 2. Try to extract just from backticks if tag is missing
+        const backtickMatch = raw.match(/```(?:javascript|js)?\s*\n([\s\S]*?)```/i);
+        if (backtickMatch) extractedCode = backtickMatch[1];
+      }
+
+      if (extractedCode) {
+        // Remove trailing backticks if they were accidentally included inside the tag
+        extractedCode = extractedCode.replace(/```(?:javascript|js)?\s*\n/gi, '').replace(/```/g, '').trim();
+        result.fixedContent = extractedCode;
       }
     } catch (err) {
       log.error(`Failed to parse LLM response`, err.message);
@@ -180,8 +189,8 @@ function generateDiff(original, fixed, filePath) {
   let chunkStart = -1;
 
   for (let i = 0; i < maxLen; i++) {
-    const o = origLines[i];
-    const f = fixedLines[i];
+    const o = origLines[i] ? origLines[i].replace(/\r$/, '') : undefined;
+    const f = fixedLines[i] ? fixedLines[i].replace(/\r$/, '') : undefined;
     if (o !== f) {
       if (!inChange) {
         chunkStart = Math.max(0, i - 2);
