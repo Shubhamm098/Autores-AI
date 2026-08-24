@@ -7,6 +7,7 @@ const { analyse }     = require('./analyser');
 const { scout }       = require('./code-scout');
 const { generateFix, generateDiff, applyFix } = require('./fixer');
 const { runTests }    = require('./tester');
+const { generateTest } = require('./sdet');
 const { storeSolution, findSimilar } = require('./knowledge');
 const { createSandbox, destroySandbox, getSandboxFilePath } = require('./sandbox');
 const { sendApprovalRequest } = require('./notifier');
@@ -127,6 +128,22 @@ async function runPipeline(ticket, emit = () => {}) {
     await prisma.sandboxSession.create({
       data: { ticketId: ticket.id, sandboxPath: sandboxSession, status: 'ACTIVE' },
     });
+
+    // ── STEP 3.5: SDET Agent (TDD) ──
+    log('sdet:start', 'Generating autonomous unit test to reproduce bug...');
+    const sdetT0 = Date.now();
+    try {
+      const sdetResult = await generateTest(ticket, analysisResult, scoutResult);
+      // Write the generated test into the sandbox's tests directory
+      const testFilePath = path.join(sandboxSession, 'tests', `autores-generated-${ticket.id}.test.js`);
+      fs.writeFileSync(testFilePath, sdetResult.testContent, 'utf8');
+      await logAgentRun(ticket.id, 'SDETAgent', 'SUCCESS', { bugType: analysisResult.bugType }, { testFilePath }, sdetT0);
+      log('sdet:done', { testFile: `autores-generated-${ticket.id}.test.js` });
+    } catch (sdetErr) {
+      log('sdet:failed', { error: sdetErr.message });
+      await logAgentRun(ticket.id, 'SDETAgent', 'FAILED', { bugType: analysisResult.bugType }, { error: sdetErr.message }, sdetT0);
+      olog.warn(`SDET generation failed, falling back to existing tests only.`, sdetErr.message);
+    }
 
     // ── STEP 4: Fix (with retry loop) ──
     let fixResult = null;

@@ -147,9 +147,11 @@ async function runTests(sandboxPath, ticket, affectedFile = null) {
             relevantTotal++;
           }
 
+          const isGeneratedSuite = suite.testFilePath && suite.testFilePath.includes('autores-generated');
+
           for (const t of assertionResults) {
             const name = t.fullName || t.title || 'Unknown Test';
-            const isRelevant = !relevantPrefix || name.startsWith(relevantPrefix);
+            const isRelevant = !relevantPrefix || name.startsWith(relevantPrefix) || isGeneratedSuite;
             
             allTests.push({
               name,
